@@ -1,0 +1,31 @@
+<Window xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
+    x:Class="ScreenSaver.SettingsWindow"
+    Title="Настройки скринсейвера"
+    CanResize="False"
+    SizeToContent="WidthAndHeight"
+    WindowStartupLocation="CenterOwner">
+
+    <StackPanel Spacing="10" Margin="20">
+        <CheckBox Name="ShuffleCheckBox" Content="Перемешивать изображения" />
+
+        <StackPanel Orientation="Horizontal" Spacing="5">
+            <TextBlock Text="Время показа (сек):" VerticalAlignment="Center" />
+            <NumericUpDown Name="TimeUpDown" Minimum="1" Maximum="300" Value="5" />
+        </StackPanel>
+
+        <TextBlock Text="Папка с изображениями:" />
+        <TextBox Name="PathTextBox" IsReadOnly="True" />
+        <Button Name="BrowseButton" Content="Выбрать..." />
+
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right"
+            Margin="0,15,0,0">
+            <Button Name="SaveButton" Content="Сохранить" />
+            <Button Name="CancelButton" Content="Отмена" />
+        </StackPanel>
+    </StackPanel>
+
+</Window> 
