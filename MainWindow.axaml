@@ -8,6 +8,7 @@
     <Grid>
         <Image Name="Image1" Stretch="Uniform" />
         <Image Name="Image2" Stretch="Uniform" Opacity="0" />
+
         <Button Name="SettingsButton"
             Content="⚙"
             FontSize="24"

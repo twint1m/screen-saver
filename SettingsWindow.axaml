@@ -1,31 +1,36 @@
 <Window xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
     x:Class="ScreenSaver.SettingsWindow"
-    Title="Настройки скринсейвера"
+    Title="Настройки"
+    Width="500" Height="250"
     CanResize="False"
-    SizeToContent="WidthAndHeight"
     WindowStartupLocation="CenterOwner">
 
     <StackPanel Spacing="10" Margin="20">
-        <CheckBox Name="ShuffleCheckBox" Content="Перемешивать изображения" />
+        <TextBlock Text="Настройки скринсейвера" FontSize="18" FontWeight="Bold"
+            HorizontalAlignment="Center" />
 
-        <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="Время показа (сек):" VerticalAlignment="Center" />
-            <NumericUpDown Name="TimeUpDown" Minimum="1" Maximum="300" Value="5" />
-        </StackPanel>
+        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto" Margin="0,15,0,0">
 
-        <TextBlock Text="Папка с изображениями:" />
-        <TextBox Name="PathTextBox" IsReadOnly="True" />
-        <Button Name="BrowseButton" Content="Выбрать..." />
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">Папка с
+                изображениями:</TextBlock>
+            <TextBox Name="ImageFolderPathTextBox" Grid.Row="0" Grid.Column="1" Margin="10,0" />
+            <Button Name="BrowseButton" Grid.Row="0" Grid.Column="2">Обзор...</Button>
 
-        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right"
-            Margin="0,15,0,0">
-            <Button Name="SaveButton" Content="Сохранить" />
-            <Button Name="CancelButton" Content="Отмена" />
+            <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center">Время показа (сек):</TextBlock>
+            <NumericUpDown Name="ImageDisplayTimeNumeric" Grid.Row="1" Grid.Column="1" Minimum="1"
+                Margin="10,0" />
+
+            <CheckBox Name="ShuffleCheckBox" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                Margin="0,10,0,0">
+                Перемешивать изображения
+            </CheckBox>
+        </Grid>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10"
+            Margin="0,20,0,0">
+            <Button Name="SaveButton" Content="Сохранить" IsDefault="True" />
+            <Button Name="CancelButton" Content="Отмена" IsCancel="True" />
         </StackPanel>
     </StackPanel>
-
 </Window> 

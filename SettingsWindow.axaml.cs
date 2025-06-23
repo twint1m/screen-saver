@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,43 +10,64 @@ namespace ScreenSaver;
 public partial class SettingsWindow : Window
 {
     private readonly ScreenSaverSettings _settings;
+    
+    private TextBox _imageFolderPathTextBox = null!;
+    private NumericUpDown _imageDisplayTimeNumeric = null!;
+    private CheckBox _shuffleCheckBox = null!;
+    private Button _browseButton = null!;
+    private Button _saveButton = null!;
+    private Button _cancelButton = null!;
 
-    public SettingsWindow()
+    public SettingsWindow() // Required for the previewer
     {
-        // This constructor is for the XAML previewer.
         InitializeComponent();
-        _settings = new ScreenSaverSettings(); 
+        _settings = new ScreenSaverSettings(); // Use dummy settings for preview
+        BindControls();
+        LoadSettings();
     }
 
     public SettingsWindow(ScreenSaverSettings settings)
     {
         InitializeComponent();
         _settings = settings;
+        BindControls();
+        LoadSettings();
+    }
 
-        // Load current settings into the UI
-        var shuffleCheckBox = this.FindControl<CheckBox>("ShuffleCheckBox")!;
-        var timeUpDown = this.FindControl<NumericUpDown>("TimeUpDown")!;
-        var pathTextBox = this.FindControl<TextBox>("PathTextBox")!;
-        
-        shuffleCheckBox.IsChecked = _settings.Shuffle;
-        timeUpDown.Value = _settings.ImageDisplayTimeSeconds;
-        pathTextBox.Text = _settings.ImagesPath;
+    private void BindControls()
+    {
+        _imageFolderPathTextBox = this.FindControl<TextBox>("ImageFolderPathTextBox")!;
+        _imageDisplayTimeNumeric = this.FindControl<NumericUpDown>("ImageDisplayTimeNumeric")!;
+        _shuffleCheckBox = this.FindControl<CheckBox>("ShuffleCheckBox")!;
+        _browseButton = this.FindControl<Button>("BrowseButton")!;
+        _saveButton = this.FindControl<Button>("SaveButton")!;
+        _cancelButton = this.FindControl<Button>("CancelButton")!;
 
-        // Attach event handlers
-        var browseButton = this.FindControl<Button>("BrowseButton")!;
-        browseButton.Click += BrowseButton_Click;
-        
-        var saveButton = this.FindControl<Button>("SaveButton")!;
-        saveButton.Click += SaveButton_Click;
+        _browseButton.Click += BrowseButton_Click;
+        _saveButton.Click += (s, e) => { SaveSettings(); Close(true); };
+        _cancelButton.Click += (s, e) => Close(false);
+    }
+    
+    private void LoadSettings()
+    {
+        _imageFolderPathTextBox.Text = _settings.ImageFolderPath;
+        _imageDisplayTimeNumeric.Value = _settings.ImageDisplayTimeSeconds;
+        _shuffleCheckBox.IsChecked = _settings.Shuffle;
+    }
 
-        var cancelButton = this.FindControl<Button>("CancelButton")!;
-        cancelButton.Click += CancelButton_Click;
+    private void SaveSettings()
+    {
+        _settings.ImageFolderPath = _imageFolderPathTextBox.Text ?? string.Empty;
+        _settings.ImageDisplayTimeSeconds = (int)(_imageDisplayTimeNumeric.Value ?? 5);
+        _settings.Shuffle = _shuffleCheckBox.IsChecked ?? true;
     }
 
     private async void BrowseButton_Click(object? sender, RoutedEventArgs e)
     {
-        var pathTextBox = this.FindControl<TextBox>("PathTextBox")!;
-        var folder = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        var topLevel = GetTopLevel(this);
+        if (topLevel is null) return;
+
+        var folder = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = "Выберите папку с изображениями",
             AllowMultiple = false
@@ -53,25 +75,7 @@ public partial class SettingsWindow : Window
 
         if (folder.Any())
         {
-            pathTextBox.Text = folder.First().Path.LocalPath;
+            _imageFolderPathTextBox.Text = folder[0].Path.LocalPath;
         }
-    }
-
-    private void SaveButton_Click(object? sender, RoutedEventArgs e)
-    {
-        var shuffleCheckBox = this.FindControl<CheckBox>("ShuffleCheckBox")!;
-        var timeUpDown = this.FindControl<NumericUpDown>("TimeUpDown")!;
-        var pathTextBox = this.FindControl<TextBox>("PathTextBox")!;
-
-        _settings.Shuffle = shuffleCheckBox.IsChecked ?? true;
-        _settings.ImageDisplayTimeSeconds = (int)timeUpDown.Value;
-        _settings.ImagesPath = pathTextBox.Text;
-        
-        Close(true); // Close and indicate success
-    }
-
-    private void CancelButton_Click(object? sender, RoutedEventArgs e)
-    {
-        Close(false); // Close and indicate cancellation
     }
 } 
