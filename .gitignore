@@ -36,3 +36,5 @@ bld/
 .vs/ScreenSaver/v17/ipch/
 # Rider
 .idea/
+
+.DS_Store

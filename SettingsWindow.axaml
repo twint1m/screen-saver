@@ -2,7 +2,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     x:Class="ScreenSaver.SettingsWindow"
     Title="Настройки"
-    Width="500" Height="250"
+    Width="500" Height="350"
     CanResize="False"
     WindowStartupLocation="CenterOwner">
 
@@ -10,7 +10,8 @@
         <TextBlock Text="Настройки скринсейвера" FontSize="18" FontWeight="Bold"
             HorizontalAlignment="Center" />
 
-        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto" Margin="0,15,0,0">
+        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+            Margin="0,15,0,0">
 
             <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">Папка с
                 изображениями:</TextBlock>
@@ -25,8 +26,28 @@
                 Margin="0,10,0,0">
                 Перемешивать изображения
             </CheckBox>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center">Режим смены:</TextBlock>
+            <ComboBox Name="ModeComboBox" Grid.Row="3" Grid.Column="1" Margin="10,0">
+                <ComboBoxItem Content="Полная замена" Tag="FullReplace" />
+                <ComboBoxItem Content="Частичное перекрытие" Tag="PartialOverlay" />
+                <ComboBoxItem Content="Слайд" Tag="Slide" />
+                <ComboBoxItem Content="Масштабирование" Tag="Scale" />
+                <ComboBoxItem Content="Поворот" Tag="Rotate" />
+            </ComboBox>
+
+            <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center">Эффект перехода:</TextBlock>
+            <ComboBox Name="EffectComboBox" Grid.Row="4" Grid.Column="1" Margin="10,0">
+                <ComboBoxItem Content="Затухание" Tag="Fade" />
+                <ComboBoxItem Content="Слайд влево" Tag="SlideLeft" />
+                <ComboBoxItem Content="Слайд вправо" Tag="SlideRight" />
+                <ComboBoxItem Content="Увеличение" Tag="ZoomIn" />
+                <ComboBoxItem Content="Уменьшение" Tag="ZoomOut" />
+                <ComboBoxItem Content="Поворот" Tag="Rotate" />
+            </ComboBox>
         </Grid>
 
+        <Separator Margin="0,20,0,0" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10"
             Margin="0,20,0,0">
             <Button Name="SaveButton" Content="Сохранить" IsDefault="True" />

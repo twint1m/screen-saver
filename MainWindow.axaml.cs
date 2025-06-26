@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Media;
 
 namespace ScreenSaver;
 
@@ -126,17 +127,119 @@ public partial class MainWindow : Window
         _currentImageIndex = (_currentImageIndex + 1) % _imagePaths.Count;
         Console.WriteLine($"Showing image {_currentImageIndex}");
         secondaryImage.Source = bmp;
-        
+
         if (isInitial)
         {
             primaryImage.Opacity = 1;
+            primaryImage.RenderTransform = null;
+            secondaryImage.RenderTransform = null;
             primaryImage.Source = bmp;
         }
         else
         {
-            var fadeOut = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 0.0) } } } };
-            var fadeIn = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 1.0) } } } };
-            await Task.WhenAll(fadeOut.RunAsync(primaryImage, token), fadeIn.RunAsync(secondaryImage, token));
+            var mode = _settings.Mode;
+            var effect = _settings.Effect;
+            Animation? animOut = null;
+            Animation? animIn = null;
+            // Сброс трансформаций
+            primaryImage.RenderTransform = null;
+            secondaryImage.RenderTransform = null;
+            switch (mode)
+            {
+                case TransitionMode.FullReplace:
+                    switch (effect)
+                    {
+                        case TransitionEffect.Fade:
+                            animOut = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 0.0) } } } };
+                            animIn = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 1.0) } } } };
+                            break;
+                        case TransitionEffect.SlideLeft:
+                        case TransitionEffect.SlideRight:
+                        {
+                            double width = primaryImage.Bounds.Width > 0 ? primaryImage.Bounds.Width : primaryImage.Width;
+                            if (width == 0) width = this.Bounds.Width;
+                            var outTransform = new TranslateTransform();
+                            var inTransform = new TranslateTransform();
+                            primaryImage.RenderTransform = outTransform;
+                            secondaryImage.RenderTransform = inTransform;
+                            double outTo = effect == TransitionEffect.SlideLeft ? -width : width;
+                            double inFrom = effect == TransitionEffect.SlideLeft ? width : -width;
+                            animOut = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(TranslateTransform.XProperty, outTo) } } } };
+                            animIn = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(TranslateTransform.XProperty, inFrom) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(TranslateTransform.XProperty, 0.0) } } } };
+                            break;
+                        }
+                        case TransitionEffect.ZoomIn:
+                        case TransitionEffect.ZoomOut:
+                        {
+                            var outTransform = new ScaleTransform(1,1);
+                            var inTransform = new ScaleTransform(1,1);
+                            primaryImage.RenderTransform = outTransform;
+                            secondaryImage.RenderTransform = inTransform;
+                            double outTo = effect == TransitionEffect.ZoomIn ? 0.5 : 1.5;
+                            double inFrom = effect == TransitionEffect.ZoomIn ? 0.5 : 1.5;
+                            animOut = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(ScaleTransform.ScaleXProperty, outTo), new Setter(ScaleTransform.ScaleYProperty, outTo), new Setter(OpacityProperty, 0.0) } } } };
+                            animIn = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(ScaleTransform.ScaleXProperty, inFrom), new Setter(ScaleTransform.ScaleYProperty, inFrom), new Setter(OpacityProperty, 0.0) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(ScaleTransform.ScaleXProperty, 1.0), new Setter(ScaleTransform.ScaleYProperty, 1.0), new Setter(OpacityProperty, 1.0) } } } };
+                            break;
+                        }
+                        case TransitionEffect.Rotate:
+                        {
+                            var outTransform = new RotateTransform(0);
+                            var inTransform = new RotateTransform(0);
+                            primaryImage.RenderTransform = outTransform;
+                            secondaryImage.RenderTransform = inTransform;
+                            animOut = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(RotateTransform.AngleProperty, 90.0), new Setter(OpacityProperty, 0.0) } } } };
+                            animIn = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(RotateTransform.AngleProperty, -90.0), new Setter(OpacityProperty, 0.0) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(RotateTransform.AngleProperty, 0.0), new Setter(OpacityProperty, 1.0) } } } };
+                            break;
+                        }
+                    }
+                    break;
+                case TransitionMode.PartialOverlay:
+                {
+                    var outTransform = new RotateTransform(0);
+                    var inTransform = new RotateTransform(0);
+                    primaryImage.RenderTransform = outTransform;
+                    secondaryImage.RenderTransform = inTransform;
+                    animOut = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 0.5), new Setter(RotateTransform.AngleProperty, 10.0) } } } };
+                    animIn = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, 0.0), new Setter(RotateTransform.AngleProperty, -10.0) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 1.0), new Setter(RotateTransform.AngleProperty, 0.0) } } } };
+                    break;
+                }
+                case TransitionMode.Slide:
+                {
+                    double width = primaryImage.Bounds.Width > 0 ? primaryImage.Bounds.Width : primaryImage.Width;
+                    if (width == 0) width = this.Bounds.Width;
+                    var outTransform = new TranslateTransform();
+                    var inTransform = new TranslateTransform();
+                    primaryImage.RenderTransform = outTransform;
+                    secondaryImage.RenderTransform = inTransform;
+                    animOut = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(TranslateTransform.XProperty, -width) } } } };
+                    animIn = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(TranslateTransform.XProperty, width) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(TranslateTransform.XProperty, 0.0) } } } };
+                    break;
+                }
+                case TransitionMode.Scale:
+                {
+                    var outTransform = new ScaleTransform(1,1);
+                    var inTransform = new ScaleTransform(1,1);
+                    primaryImage.RenderTransform = outTransform;
+                    secondaryImage.RenderTransform = inTransform;
+                    animOut = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(ScaleTransform.ScaleXProperty, 0.5), new Setter(ScaleTransform.ScaleYProperty, 0.5), new Setter(OpacityProperty, 0.0) } } } };
+                    animIn = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(ScaleTransform.ScaleXProperty, 0.5), new Setter(ScaleTransform.ScaleYProperty, 0.5), new Setter(OpacityProperty, 0.0) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(ScaleTransform.ScaleXProperty, 1.0), new Setter(ScaleTransform.ScaleYProperty, 1.0), new Setter(OpacityProperty, 1.0) } } } };
+                    break;
+                }
+                case TransitionMode.Rotate:
+                {
+                    var outTransform = new RotateTransform(0);
+                    var inTransform = new RotateTransform(0);
+                    primaryImage.RenderTransform = outTransform;
+                    secondaryImage.RenderTransform = inTransform;
+                    animOut = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(1), Setters = { new Setter(RotateTransform.AngleProperty, 90.0), new Setter(OpacityProperty, 0.0) } } } };
+                    animIn = new Animation { Duration = TimeSpan.FromSeconds(1.5), Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(RotateTransform.AngleProperty, -90.0), new Setter(OpacityProperty, 0.0) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(RotateTransform.AngleProperty, 0.0), new Setter(OpacityProperty, 1.0) } } } };
+                    break;
+                }
+            }
+            if (animOut != null && animIn != null)
+                await Task.WhenAll(animOut.RunAsync(primaryImage, token), animIn.RunAsync(secondaryImage, token));
+            else
+                await Task.Delay(500, token); // fallback
         }
         
         primaryImage.Source = null;

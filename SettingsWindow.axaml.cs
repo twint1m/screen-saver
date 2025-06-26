@@ -17,6 +17,8 @@ public partial class SettingsWindow : Window
     private Button _browseButton = null!;
     private Button _saveButton = null!;
     private Button _cancelButton = null!;
+    private ComboBox _modeComboBox = null!;
+    private ComboBox _effectComboBox = null!;
 
     public SettingsWindow() // Required for the previewer
     {
@@ -42,6 +44,8 @@ public partial class SettingsWindow : Window
         _browseButton = this.FindControl<Button>("BrowseButton")!;
         _saveButton = this.FindControl<Button>("SaveButton")!;
         _cancelButton = this.FindControl<Button>("CancelButton")!;
+        _modeComboBox = this.FindControl<ComboBox>("ModeComboBox")!;
+        _effectComboBox = this.FindControl<ComboBox>("EffectComboBox")!;
 
         _browseButton.Click += BrowseButton_Click;
         _saveButton.Click += (s, e) => { SaveSettings(); Close(true); };
@@ -53,6 +57,24 @@ public partial class SettingsWindow : Window
         _imageFolderPathTextBox.Text = _settings.ImageFolderPath;
         _imageDisplayTimeNumeric.Value = _settings.ImageDisplayTimeSeconds;
         _shuffleCheckBox.IsChecked = _settings.Shuffle;
+        // Устанавливаем выбранный режим
+        foreach (ComboBoxItem item in _modeComboBox.Items!)
+        {
+            if ((string?)item.Tag == _settings.Mode.ToString())
+            {
+                _modeComboBox.SelectedItem = item;
+                break;
+            }
+        }
+        // Устанавливаем выбранный эффект
+        foreach (ComboBoxItem item in _effectComboBox.Items!)
+        {
+            if ((string?)item.Tag == _settings.Effect.ToString())
+            {
+                _effectComboBox.SelectedItem = item;
+                break;
+            }
+        }
     }
 
     private void SaveSettings()
@@ -60,6 +82,12 @@ public partial class SettingsWindow : Window
         _settings.ImageFolderPath = _imageFolderPathTextBox.Text ?? string.Empty;
         _settings.ImageDisplayTimeSeconds = (int)(_imageDisplayTimeNumeric.Value ?? 5);
         _settings.Shuffle = _shuffleCheckBox.IsChecked ?? true;
+        // Сохраняем выбранный режим
+        if (_modeComboBox.SelectedItem is ComboBoxItem modeItem && Enum.TryParse<TransitionMode>((string)modeItem.Tag!, out var mode))
+            _settings.Mode = mode;
+        // Сохраняем выбранный эффект
+        if (_effectComboBox.SelectedItem is ComboBoxItem effectItem && Enum.TryParse<TransitionEffect>((string)effectItem.Tag!, out var effect))
+            _settings.Effect = effect;
     }
 
     private async void BrowseButton_Click(object? sender, RoutedEventArgs e)
